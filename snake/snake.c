@@ -40,6 +40,10 @@ struct apple_t {
         int x;
         int y;
 };
+struct grape_t {
+        int x;
+        int y;
+};
 
 struct fb_t {
         uint16_t pixel[8][8];
@@ -54,6 +58,9 @@ struct snake_t snake = {
         NONE,
 };
 struct apple_t apple = {
+        4, 4,
+};
+struct grape_t grape = {
         4, 4,
 };
 
@@ -139,11 +146,12 @@ void render()
 {
         struct segment_t *seg_i;
         memset(fb, 0, 128);
-        fb->pixel[apple.x][apple.y]=0xF800;
+        fb->pixel[apple.x][apple.y]=0xF800; //red
+        fb->pixel[grape.x][grape.y]=0xF81F; //magenta
         for(seg_i = snake.tail; seg_i->next; seg_i=seg_i->next) {
-                fb->pixel[seg_i->x][seg_i->y] = 0x7E0;
+                fb->pixel[seg_i->x][seg_i->y] = 0x7E0; //green
         }
-        fb->pixel[seg_i->x][seg_i->y]=0xFFFF;
+        fb->pixel[seg_i->x][seg_i->y]=0xFFFF; //white
 }
 
 int check_collision(int appleCheck)
@@ -153,6 +161,30 @@ int check_collision(int appleCheck)
         if (appleCheck) {
                 for (seg_i = snake.tail; seg_i; seg_i=seg_i->next) {
                         if (seg_i->x == apple.x && seg_i->y == apple.y)
+                                return 1;
+                        }
+                return 0;
+        }
+
+        for(seg_i = snake.tail; seg_i->next; seg_i=seg_i->next) {
+                if (snake.head.x == seg_i->x && snake.head.y == seg_i->y)
+                        return 1;
+        }
+
+        if (snake.head.x < 0 || snake.head.x > 7 ||
+            snake.head.y < 0 || snake.head.y > 7) {
+                return 1;
+        }
+        return 0;
+}
+
+int check_collision_2(int grapeCheck)
+{
+        struct segment_t *seg_i;
+
+        if (grapeCheck) {
+                for (seg_i = snake.tail; seg_i; seg_i=seg_i->next) {
+                        if (seg_i->x == grape.x && seg_i->y == grape.y)
                                 return 1;
                         }
                 return 0;
@@ -195,6 +227,24 @@ void game_logic(void)
                         apple.y = rand() % 8;
                 }
         }
+        else if (check_collision_2(1)) {
+                new_tail = malloc(sizeof(struct segment_t));
+                if (!new_tail) {
+                        printf("Ran out of memory.\n");
+                        running = 0;
+                        return;
+                }
+                new_tail->x=snake.tail->x;
+                new_tail->y=snake.tail->y;
+                new_tail->next=snake.tail;
+                snake.tail = new_tail;
+
+                while (check_collision_2(1)) {
+                        grape.x = rand() % 8;
+                        grape.y = rand() % 8;
+                }
+        }
+
         switch (snake.heading) {
                 case LEFT:
                         seg_i->y--;
@@ -331,4 +381,3 @@ err_ev:
         close(evpoll.fd);
         return ret;
 }
-
