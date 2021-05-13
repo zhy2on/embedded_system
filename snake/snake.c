@@ -277,6 +277,8 @@ void reset(void)
         snake.tail->y=3;
         apple.x = rand() % 8;
         apple.y = rand() % 8;
+        grape.x = rand() % 8;
+        grape.y = rand() % 8;
         snake.heading = NONE;
 }
 
